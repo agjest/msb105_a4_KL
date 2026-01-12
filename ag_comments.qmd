@@ -1,0 +1,13 @@
+---
+title: "ag comments"
+format: html
+---
+
+## Generelle kommentarer
+
+- Har tatt bort utskrift av alle ca. 30000 observasjoner av populasjon. Så spennende er dette ikke ;-)
+- Har lagt inn typst for generering av pdf (går mye fortere og håndterer flextable tabeller bedre enn pdf via latex)
+- Har lagt inn kode som viser hvordan man kan lage multiple rekker i tabeller slik at tabellene fyller mer av siden og blir mer kompakte.
+- Fint og solid arbeid!
+
+

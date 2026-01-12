@@ -1,6 +1,7 @@
 ---
 title: "Assignment 4, MSB 105, 2025"
 author: Karin Liang
+ft.arraystrecth: 0.6
 format:
   pdf:
     fig-cap-location: bottom
@@ -8,6 +9,7 @@ format:
   html:
     fig-cap-location: bottom
     fig-number: true
+  typst: default
 editor: visual
 ---
 
@@ -186,15 +188,16 @@ pop_tabs <- toc_txt |>
       )
   ) |>
   select(title, code)
+```
 
+```{r}
 pop_tabs |>
   flextable() |>
   width(1, width = 5) |>
   width(2, width = 2)
-
 ```
 
-## Oppgave 2
+##  2
 
 ```{r}
 # Last ned Data Structure Definition (DSD) for nama_10r_3popgdp
@@ -204,13 +207,14 @@ dsd_pop <- get_eurostat_dsd("nama_10r_3popgdp")
 ```
 
 ```{r}
+#| ft.arraystretch: 0.7
 dsd_pop |>
   filter(concept %in% c("freq", "unit", "geo")) |>
+  head(n = 45) |> 
   flextable() |>
-  width(j = 1, width = 1) |>
-  width(j = 2, width = 2) |>
-  width(j = 3, width = 2)
-
+  fontsize(size = 7, part = "all") |> 
+  line_spacing(space = 0.1) |> 
+  autofit()
 ```
 
 ```{r}
@@ -237,7 +241,77 @@ dim(pop)
 ```
 
 ```{r}
-pop
+pop |> 
+  filter(str_sub(geo, 1,2) == "AL") |> 
+  nrow()
+```
+
+```{r}
+#| message: false
+#| label: tbl-pop-first120
+#| tbl-cap: First 126 observations in pop
+# ag: ikke så smart å printe alle 30000
+pop |> 
+  head(n = 126) %>%
+  {
+    list(
+      p1 = slice(., 1:42),
+      p2 = slice(., 43:84),
+      p3 = slice(., 85:126)
+    )
+  } |> 
+  bind_cols() |> 
+  flextable() |>
+  set_header_labels(
+    geo...1 = "NUTS3",
+    time...2 = "År",
+    pop_n3...3 = "Befolkning\nNUTS3",
+    geo...4 = "NUTS3",
+    time...5 = "År",
+    pop_n3...6 = "Befolkning\nNUTS3",  
+    geo...7 = "NUTS3",
+    time...8 = "År",
+    pop_n3...9 = "Befolkning\nNUTS3"
+  ) |> 
+  line_spacing(space = 0.1)  |> 
+  fontsize(size = 9, part = "all") |> 
+  align(j = c(3, 6, 9), align = "left", part = "all") |> 
+  autofit()
+```
+
+```{r}
+#| message: false
+#| label: tbl-pop-next126
+#| tbl-cap: Next 126 observations in pop (the rest of Albania).
+# ag: ikke så smart å printe alle 30000. Tror det holder lenge
+# med disse 252 observasjonene
+pop |> 
+  _[127:252,] %>%
+  {
+    list(
+      p1 = slice(., 1:42),
+      p2 = slice(., 43:84),
+      p3 = slice(., 85:126)
+    )
+  } |> 
+  bind_cols() |> 
+  flextable() |>
+  set_header_labels(
+    geo...1 = "NUTS3",
+    time...2 = "År",
+    pop_n3...3 = "Befolkning\nNUTS3",
+    geo...4 = "NUTS3",
+    time...5 = "År",
+    pop_n3...6 = "Befolkning\nNUTS3",  
+    geo...7 = "NUTS3",
+    time...8 = "År",
+    pop_n3...9 = "Befolkning\nNUTS3"
+  ) |> 
+  line_spacing(space = 0.1)  |> 
+  fontsize(size = 9, part = "all") |> 
+  align(j = c(3, 6, 9), align = "left", part = "all") |> 
+  autofit()
+
 ```
 
 ## Oppgave 3
@@ -267,7 +341,6 @@ eu_data <- gdp_pop %>%
   # note that a few countries will have missing data for
   # some years at the start of the period
   filter(time > 1999 & time < 2023)
-
 ```
 
 ```{r}
@@ -308,6 +381,7 @@ eu_data <- eu_data |>
 ```
 
 ```{r}
+#| paged.print: false
 eu_data |>
   select(n3, n2, n1, nc) |>
   head(10)
@@ -349,8 +423,52 @@ flextable_nuts3 <- nuts3_per_land |>
   width(j = 2, width = 1) |>
   add_footer_lines(values = paste0("n: ", n_lands)) |>
   align(align = "left", part = "footer")
+```
 
-flextable_nuts3
+```{r}
+#| message: false
+# ag: Forslag til hvordan man kan lage en mer kompakt tabell
+nuts3_per_land  |> 
+  arrange(nc)  %>%
+  bind_rows(
+    # ag: må legge til en tibble med 3 rekker med NA for å
+    # få 32 rekker i tibble
+    as_tibble(
+      matrix(
+        rep(NA, 6), 
+        nrow = 3, 
+        dimnames = list(NULL, c("nc", "Antall")
+                        )
+        )
+      )
+  ) %>% 
+  # ag: splitter opp i liste med 4 objekter
+  {
+    list(
+      p1 = slice(., 1:8),
+      p2 = slice(., 9:16),
+      p3 = slice(., 17:24),
+      p4 = slice(., 25:32)
+    )
+  } |> 
+  # ag: binder de fire sammen kolonnevis
+  bind_cols() |> 
+  flextable() |>
+  # ag: flextable krever unike variabelnavn, men vi kan
+  # ha like heading labels
+  set_header_labels(
+    nc...1 = "Land\nkode",
+    Antall...2 = "Antall",
+    nc...3 = "Land\nkode",
+    Antall...4 = "Antall",
+    nc...5 = "Land\nkode",
+    Antall...6 = "Antall",
+    nc...7 = "Land\nkode",
+    Antall...8 = "Antall"
+  ) |> 
+  line_spacing(space = 0.5, part = "body")  |> 
+  align(align = "left", part = "all") |> 
+  autofit()
 ```
 
 ## Oppgave 7
@@ -420,11 +538,53 @@ eu_data <- eu_data |>
 ```
 
 ```{r}
+#| label: tbl-land-lk
+#| tbl-cap: Navn på land og tilhørende landkode.
+#| message: false
+# ag: Forslag til kompakt tabell for land og landkoder
 eu_data |>
   select(nc_name, nc) |>
   distinct() |>
-  print(n = 30)
-
+  arrange(nc)  %>%
+  bind_rows(
+    # ag: må legge til en tibble med 3 rekker med NA for å
+    # få 32 rekker i tibble
+    as_tibble(
+      matrix(
+        rep(NA, 6), 
+        nrow = 3, 
+        dimnames = list(NULL, c("nc_name", "nc")
+                        )
+        )
+      )
+  ) %>% 
+  # ag: splitter opp i liste med 4 objekter
+  {
+    list(
+      p1 = slice(., 1:8),
+      p2 = slice(., 9:16),
+      p3 = slice(., 17:24),
+      p4 = slice(., 25:32)
+    )
+  } |> 
+  # ag: binder de fire sammen kolonnevis
+  bind_cols() |> 
+  flextable() |>
+  # ag: flextable krever unike variabelnavn, men vi kan
+  # ha like heading labels
+  set_header_labels(
+    nc_name...1 = "Land",
+    nc...2 = "Land\nkode",
+    nc_name...3 = "Land",
+    nc...4 = "Land\nkode",
+    nc_name...5 = "Land",
+    nc...6 = "Land\nkode",
+    nc_name...7 = "Land",
+    nc...8 = "Land\nkode"
+  ) |> 
+  line_spacing(space = 0.5, part = "body")  |> 
+  align(align = "left", part = "all") |> 
+  autofit()
 ```
 
 # Beregning av Gini på NUTS2, NUTS1 og NUTSc nivå
@@ -588,7 +748,10 @@ ggplot(gini_NUTSeu_nest, aes(x = time, y = gini_eu)) +
 
 ## Oppgave 19
 
-Gini-koeffisienten mellom NUTS3-regioner viser en tydelig fallende trend over tid, slik @fig-gini-eu illustrerer. Dette innebærer at regionale forskjeller gradvis reduseres. En slik utvikling er i tråd med målet om å styrke mindre utviklede områder gjennom EUs strukturfond. @fig-gini-eu indikerer også at tiltaket kan ha ønsket effekt.
+Gini-koeffisienten mellom NUTS3-regioner viser en tydelig fallende trend over tid, slik @fig-gini-eu illustrerer.
+Dette innebærer at regionale forskjeller gradvis reduseres.
+En slik utvikling er i tråd med målet om å styrke mindre utviklede områder gjennom EUs strukturfond.
+@fig-gini-eu indikerer også at tiltaket kan ha ønsket effekt.
 
 ## Oppgave 20
 
@@ -767,7 +930,9 @@ gini_n1 |>
 
 ```
 
-NUTS1-regionene som har hatt økt utjevning kjennetegnes av en fallende eller stabil Gini-koeffisient over tid. Dette indikerer mindre forskjeller i verdiskaping mellom regionene innen disse områdene. Samtidig varierer utviklingen mellom regionene, og figuren alene gir ikke grunnlag for å trekke sterke konklusjoner om årsakene.
+NUTS1-regionene som har hatt økt utjevning kjennetegnes av en fallende eller stabil Gini-koeffisient over tid.
+Dette indikerer mindre forskjeller i verdiskaping mellom regionene innen disse områdene.
+Samtidig varierer utviklingen mellom regionene, og figuren alene gir ikke grunnlag for å trekke sterke konklusjoner om årsakene.
 
 ## Tyskland
 
@@ -806,9 +971,11 @@ gini_n2 |>
   slice(1)
 ```
 
-Fra @fig-gini-de-n2 ser vi at Gini-koeffisientene for NUTS2-regionene i Tyskland i analyseperioden varierer omtrent fra 0,03 til over 0,45, noe som indikerer betydelige forskjeller mellom regionene. Enkelte NUTS2-regioner har gjennom hele perioden Gini-koeffisienter som ligger klart høyere enn øvrige regioner, noe som tyder på større interne regionale forskjeller, mens andre regioner over tid har hatt gjennomgående lavere nivåer.
+Fra @fig-gini-de-n2 ser vi at Gini-koeffisientene for NUTS2-regionene i Tyskland i analyseperioden varierer omtrent fra 0,03 til over 0,45, noe som indikerer betydelige forskjeller mellom regionene.
+Enkelte NUTS2-regioner har gjennom hele perioden Gini-koeffisienter som ligger klart høyere enn øvrige regioner, noe som tyder på større interne regionale forskjeller, mens andre regioner over tid har hatt gjennomgående lavere nivåer.
 
-Basert på dataene kan regionen med de største observerte regionale forskjellene identifiseres som NUTS2-regionen DE91, som ifølge [Wikipedia: NUTS statistical regions of Germany](https://en.wikipedia.org/wiki/NUTS_statistical_regions_of_Germany) tilsvarer Braunschweig. Denne geografiske plasseringen kan imidlertid ikke leses direkte ut av figuren alene, men fremkommer først når NUTS-kodene kobles til tilhørende regioninformasjon.
+Basert på dataene kan regionen med de største observerte regionale forskjellene identifiseres som NUTS2-regionen DE91, som ifølge [Wikipedia: NUTS statistical regions of Germany](https://en.wikipedia.org/wiki/NUTS_statistical_regions_of_Germany) tilsvarer Braunschweig.
+Denne geografiske plasseringen kan imidlertid ikke leses direkte ut av figuren alene, men fremkommer først når NUTS-kodene kobles til tilhørende regioninformasjon.
 
 ## Oppgave 28
 
@@ -899,7 +1066,9 @@ top6_fr_n1_2022
 
 ```
 
-Basert på tabellen ser vi at NUTS1-sonen FR1 har suverent høyest Gini-koeffisient i 2022, med en verdi på 0,335, som er klart høyere enn de øvrige regionene. Ifølge [Wikipedia: NUTS statistical regions of France](https://en.wikipedia.org/wiki/NUTS_statistical_regions_of_France) tilsvarer FR1 regionen Île-de-France, som ligger i og rundt Paris-området. Dette innebærer at de største regionale forskjellene i Frankrike i 2022 er konsentrert i hovedstadsregionen.
+Basert på tabellen ser vi at NUTS1-sonen FR1 har suverent høyest Gini-koeffisient i 2022, med en verdi på 0,335, som er klart høyere enn de øvrige regionene.
+Ifølge [Wikipedia: NUTS statistical regions of France](https://en.wikipedia.org/wiki/NUTS_statistical_regions_of_France) tilsvarer FR1 regionen Île-de-France, som ligger i og rundt Paris-området.
+Dette innebærer at de største regionale forskjellene i Frankrike i 2022 er konsentrert i hovedstadsregionen.
 
 ## Oppgave 31
 
@@ -937,7 +1106,10 @@ eu_data |>
 
 ## Oppgave 32
 
-Ja. Ut fra @fig-gdp-fr1-n3 kan vi se at FR1 (Île-de-France) har betydelige interne forskjeller i BNP per innbygger mellom NUTS3-regionene. I 2022 ligger Paris (FR101) og Hauts-de-Seine (FR105) på et svært høyt nivå, med BNP per innbygger på om lag 100 000–115 000, mens de øvrige NUTS3-regionene i FR1 i hovedsak ligger i intervallet rundt 29 000–39 000. Denne tydelige konsentrasjonen av svært høye verdier i noen få NUTS3-regioner, kombinert med betydelig lavere nivåer i resten av regionen, bidrar til å trekke Gini-koeffisienten for FR1 opp.
+Ja.
+Ut fra @fig-gdp-fr1-n3 kan vi se at FR1 (Île-de-France) har betydelige interne forskjeller i BNP per innbygger mellom NUTS3-regionene.
+I 2022 ligger Paris (FR101) og Hauts-de-Seine (FR105) på et svært høyt nivå, med BNP per innbygger på om lag 100 000–115 000, mens de øvrige NUTS3-regionene i FR1 i hovedsak ligger i intervallet rundt 29 000–39 000.
+Denne tydelige konsentrasjonen av svært høye verdier i noen få NUTS3-regioner, kombinert med betydelig lavere nivåer i resten av regionen, bidrar til å trekke Gini-koeffisienten for FR1 opp.
 
 # Enkle modeller
 
@@ -1172,6 +1344,7 @@ t_test_diff <- t.test(
 t_test_diff
 
 ```
+
 Ja, diff_gdp_per_capita er signifikant større enn 0.
 
 # Panel modell
@@ -1199,14 +1372,18 @@ summary(p_mod)
 ```
 
 ## Oppgave 46
+
 ```{r}
 summary(
   p_mod,
   vcov = function(x) plm::vcovHC(x, method = "white2")
 )
 ```
- 
-Her benyttes en alternativ måte å generere summary() for panelmodellen ved å spesifisere en egen varians–kovariansmatrise for koeffisientene. Ved å bruke `vcovHC()` med metoden "white2" beregnes heteroskedastisitets-robuste standardfeil.
 
-De to summary-ene er basert på samme panelregresjonsmodell og gir identiske koeffisientestimater, men standardfeilene og tilhørende teststatistikker avviker. I den ordinære summary()-en er standardfeilen 2.4694e−08 og t-verdien 15.923, mens den alternative summary()-en som benytter heteroskedastisitets-robuste standardfeil via `vcovHC()` gir en høyere standardfeil på 2.7778e−08 og en lavere t-verdi på 14.155. Tilsvarende er F-statistikken 253.536 (1 og 25513 frihetsgrader) i den ordinære summary()-en, mot 200.369 (1 og 1185 frihetsgrader) i den robuste versjonen. Forskjellene skyldes bruken av ulike varians–kovariansmatriser, mens den overordnede statistiske konklusjonen forblir uendret.
+Her benyttes en alternativ måte å generere summary() for panelmodellen ved å spesifisere en egen varians–kovariansmatrise for koeffisientene.
+Ved å bruke `vcovHC()` med metoden "white2" beregnes heteroskedastisitets-robuste standardfeil.
 
+De to summary-ene er basert på samme panelregresjonsmodell og gir identiske koeffisientestimater, men standardfeilene og tilhørende teststatistikker avviker.
+I den ordinære summary()-en er standardfeilen 2.4694e−08 og t-verdien 15.923, mens den alternative summary()-en som benytter heteroskedastisitets-robuste standardfeil via `vcovHC()` gir en høyere standardfeil på 2.7778e−08 og en lavere t-verdi på 14.155.
+Tilsvarende er F-statistikken 253.536 (1 og 25513 frihetsgrader) i den ordinære summary()-en, mot 200.369 (1 og 1185 frihetsgrader) i den robuste versjonen.
+Forskjellene skyldes bruken av ulike varians–kovariansmatriser, mens den overordnede statistiske konklusjonen forblir uendret.
